@@ -6,6 +6,8 @@ This guide explains how to use Claude AI (by Anthropic) as an agent within the v
 
 Claude is an AI assistant that can take on various agent roles defined in AGENTS.md. Claude excels at understanding context, writing code, analyzing systems, and providing detailed explanations.
 
+NOTE: Never use Emojis in code or documentation. Use monochrome Unicode symbols.
+
 ## Prerequisites
 
 - Access to Claude (via API or web interface)
