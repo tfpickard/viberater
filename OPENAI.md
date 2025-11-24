@@ -150,20 +150,23 @@ response = client.chat.completions.create(
 **Advanced: Function Calling for Architecture Diagrams**:
 
 ```python
-functions = [
+tools = [
     {
-        "name": "create_architecture_diagram",
-        "description": "Creates a Mermaid diagram for system architecture",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "diagram_type": {
-                    "type": "string",
-                    "enum": ["sequence", "flowchart", "class", "entity-relationship"]
-                },
-                "components": {
-                    "type": "array",
-                    "items": {"type": "string"}
+        "type": "function",
+        "function": {
+            "name": "create_architecture_diagram",
+            "description": "Creates a Mermaid diagram for system architecture",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "diagram_type": {
+                        "type": "string",
+                        "enum": ["sequence", "flowchart", "class", "entity-relationship"]
+                    },
+                    "components": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
                 }
             }
         }
@@ -173,8 +176,8 @@ functions = [
 response = client.chat.completions.create(
     model="gpt-4-turbo-preview",
     messages=[{"role": "user", "content": "Create an architecture diagram for viberater's weather data flow"}],
-    functions=functions,
-    function_call="auto"
+    tools=tools,
+    tool_choice="auto"
 )
 ```
 
@@ -264,18 +267,21 @@ response = client.chat.completions.create(
 )
 ```
 
-**Codex (Legacy) for Code Completion**:
+**Code Completion and Inline Suggestions**:
 
-While Codex has been superseded by GPT-4 and GPT-3.5, you can still use similar patterns:
+For code completion tasks, use the chat completions API:
 
 ```python
 # For inline code completion or suggestions
-response = client.completions.create(
-    model="gpt-3.5-turbo-instruct",
-    prompt="""
+response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": "You are a code completion assistant. Complete the following code."},
+        {"role": "user", "content": """
 // Function to calculate correlation between mood and weather
 function calculateMoodWeatherCorrelation(moodData, weatherData) {
-    """,
+    """}
+    ],
     max_tokens=150,
     temperature=0
 )
@@ -494,34 +500,40 @@ response = client.chat.completions.create(
 
 ### 1. Function Calling
 
-Define functions that GPT can call to perform actions:
+Define tools that GPT can call to perform actions:
 
 ```python
-functions = [
+tools = [
     {
-        "name": "generate_migration_script",
-        "description": "Generates a database migration script",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "migration_type": {
-                    "type": "string",
-                    "enum": ["create_table", "alter_table", "add_index"]
+        "type": "function",
+        "function": {
+            "name": "generate_migration_script",
+            "description": "Generates a database migration script",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "migration_type": {
+                        "type": "string",
+                        "enum": ["create_table", "alter_table", "add_index"]
+                    },
+                    "table_name": {"type": "string"},
+                    "changes": {"type": "array", "items": {"type": "string"}}
                 },
-                "table_name": {"type": "string"},
-                "changes": {"type": "array", "items": {"type": "string"}}
-            },
-            "required": ["migration_type", "table_name"]
+                "required": ["migration_type", "table_name"]
+            }
         }
     },
     {
-        "name": "run_code_analysis",
-        "description": "Analyzes code for issues",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "code": {"type": "string"},
-                "language": {"type": "string"}
+        "type": "function",
+        "function": {
+            "name": "run_code_analysis",
+            "description": "Analyzes code for issues",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {"type": "string"},
+                    "language": {"type": "string"}
+                }
             }
         }
     }
@@ -530,8 +542,8 @@ functions = [
 response = client.chat.completions.create(
     model="gpt-4-turbo-preview",
     messages=[{"role": "user", "content": "Add a new 'tags' column to mood_entries table"}],
-    functions=functions,
-    function_call="auto"
+    tools=tools,
+    tool_choice="auto"
 )
 ```
 
@@ -599,7 +611,7 @@ assistant = client.beta.assistants.create(
         and suggest improvements that align with current patterns.
     """,
     model="gpt-4-turbo-preview",
-    tools=[{"type": "code_interpreter"}, {"type": "retrieval"}]
+    tools=[{"type": "code_interpreter"}, {"type": "file_search"}]
 )
 
 # Create a thread for ongoing conversation
